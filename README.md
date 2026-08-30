@@ -1,232 +1,402 @@
-# IMPPAT Topological Descriptor-Based QSPR Modeling
+# 🧬 IMPPAT Topological Descriptor-Based QSPR Modeling
 
-## Overview
+<p align="center">
 
-This repository contains the Python implementation of a reproducible Quantitative Structure–Property Relationship (QSPR) pipeline developed using the **IMPPAT phytochemical dataset**.
+### Machine Learning–Based QSPR Analysis of IMPPAT Phytochemicals
 
-The workflow investigates whether a compact set of topological molecular descriptors can be used to predict important physicochemical properties and the weighted Quantitative Estimate of Drug-likeness (**QEDw**) of phytochemical compounds.
+A reproducible computational pipeline for molecular descriptor reduction, ensemble QSPR modeling, blind validation, applicability-domain analysis, and phytochemical prioritization.
 
-The study uses a leakage-controlled workflow with descriptor reduction, ensemble machine learning, five-fold cross-validation, blind external validation, Y-randomization, applicability-domain analysis, and an independent RDKit descriptor benchmark.
+![Python](https://img.shields.io/badge/Python-3.x-blue?style=for-the-badge\&logo=python)
+![QSPR](https://img.shields.io/badge/Method-QSPR-purple?style=for-the-badge)
+![Machine Learning](https://img.shields.io/badge/ML-RF%20%7C%20GB%20%7C%20XGBoost-orange?style=for-the-badge)
+![RDKit](https://img.shields.io/badge/Cheminformatics-RDKit-green?style=for-the-badge)
+![Validation](https://img.shields.io/badge/Validation-5--Fold%20CV-red?style=for-the-badge)
 
----
-
-## Dataset
-
-The workflow is based on **1,335 IMPPAT phytochemical compounds**.
-
-The dataset is divided into:
-
-* **Working set:** 1,202 compounds
-* **Blind external validation set:** 133 compounds
-
-The data assembly stage merges the physicochemical-property and topological-index sources into a validated modeling table. A fixed random seed is used to ensure reproducibility of downstream splits and analyses.
-
-The pipeline deliberately excludes `Monoisotopic_Mass` from the modeling feature matrix because of its potential direct relationship with Molecular Weight and associated target leakage risk.
+</p>
 
 ---
 
-## Workflow
+## 🔬 Overview
 
-```text
-IMPPAT Data
-     │
-     ▼
-Data Assembly & Validation
-     │
-     ▼
-44 Topological Descriptors
-     │
-     ▼
-Zero-Variance Filtering
-     │
-     ▼
-Iterative VIF Pruning
-     │
-     ▼
-9 Final Topological Descriptors
-     │
-     ▼
-RF + GB + XGBoost Ensemble
-     │
-     ├── 5-Fold Cross-Validation
-     │
-     └── Blind External Validation
-     │
-     ▼
-Model Diagnostics
-     │
-     ├── Observed vs Predicted
-     └── Residual Analysis
-     │
-     ▼
-Y-Randomization
-     │
-     ▼
-Williams Applicability Domain
-     │
-     ▼
-RDKit Descriptor Benchmark
-     │
-     ▼
-QEDw Modeling
-     │
-     ▼
-Chemical-Space Prioritization
-     │
-     ▼
-Final Integrated Analysis
+This repository contains the Python implementation of a **Quantitative Structure–Property Relationship (QSPR)** pipeline developed using the **IMPPAT phytochemical dataset**.
+
+The project investigates whether a compact set of molecular topological descriptors can be used with machine-learning models to predict important physicochemical properties and **weighted Quantitative Estimate of Drug-likeness (QEDw)**.
+
+The overall workflow combines:
+
+**Descriptor reduction → Machine learning → Cross-validation → Blind validation → Statistical validation → Applicability domain → Chemical prioritization**
+
+---
+
+## 🧪 Dataset
+
+The workflow uses **1,335 IMPPAT phytochemical compounds** divided into a working set and an independent blind set.
+
+| Dataset                 | Compounds |
+| ----------------------- | --------: |
+| 🧬 Total dataset        | **1,335** |
+| 🔵 Working set          | **1,202** |
+| 🔴 Blind validation set |   **133** |
+
+The data-assembly stage merges the physicochemical-property and topological-index sources into a validated modeling table and maintains reproducibility information for downstream analysis.
+
+`Monoisotopic_Mass` is deliberately excluded from the modeling matrix because of its near-deterministic relationship with Molecular Weight, reducing the risk of direct target leakage.
+
+---
+
+# 🔄 Complete Research Pipeline
+
+```mermaid
+flowchart TD
+
+    A["🧪 IMPPAT Dataset<br/>1,335 Compounds"]
+    B["📂 Data Assembly<br/>Validation & Manifest"]
+
+    C["🔢 44 Topological<br/>Descriptors"]
+    D["⚪ Zero-Variance<br/>Filtering"]
+    E["📉 Iterative VIF<br/>Pruning"]
+    F["🧬 9 Final Topological<br/>Descriptors"]
+
+    G["🤖 Machine Learning"]
+
+    H["🌲 Random Forest"]
+    I["📈 Gradient Boosting"]
+    J["⚡ XGBoost"]
+
+    K["🤝 Ensemble Prediction"]
+
+    L["🔄 5-Fold<br/>Cross-Validation"]
+    M["🎯 Blind External<br/>Validation<br/>n = 133"]
+
+    N["📊 Diagnostics"]
+    O["🎲 Y-Randomization"]
+    P["🛡️ Williams<br/>Applicability Domain"]
+
+    Q["🧪 RDKit<br/>Benchmark"]
+    R["💊 QEDw<br/>Modeling"]
+    S["🧠 Chemical-Space<br/>Prioritization"]
+
+    T["📑 Final Integrated<br/>Analysis"]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+
+    F --> G
+    G --> H
+    G --> I
+    G --> J
+
+    H --> K
+    I --> K
+    J --> K
+
+    K --> L
+    L --> M
+    M --> N
+
+    N --> O
+    N --> P
+
+    F --> Q
+    Q --> R
+
+    P --> S
+    R --> S
+
+    O --> T
+    P --> T
+    Q --> T
+    S --> T
 ```
 
 ---
 
-## Descriptor Selection
+# 📉 Descriptor Reduction
 
 The initial topological descriptor panel contains **44 descriptors**.
 
-Descriptor quality control consists of:
+Descriptor reduction is performed using:
 
-1. Zero-variance descriptor removal
-2. Iterative Variance Inflation Factor (VIF) pruning
-3. Selection of a compact non-redundant descriptor panel
+```mermaid
+flowchart LR
 
-The VIF procedure uses standardized descriptors for numerical stability while computing VIF values.
+    A["🔢 44 Descriptors"]
+    B["⚪ Zero-Variance Filter"]
+    C["📊 VIF Analysis"]
+    D["🔄 Iterative VIF Pruning"]
+    E["🧬 9 Final Descriptors"]
 
-The final topological panel contains **9 descriptors**:
+    A --> B --> C --> D --> E
+```
 
-* Narumi-Katayama index
-* Multiplicative Zagreb1
-* Mostar index
-* Szeged index
-* Spectral radius
-* Average eccentricity
-* Sigma index
-* Balaban J index
-* Multiplicative Zagreb2
+The descriptor QC procedure first removes zero-variance descriptors and then performs iterative VIF-based reduction. VIF calculations use standardized descriptor values to improve numerical stability.
 
----
+## 🧬 Final Topological Descriptor Panel
 
-## Machine Learning Models
+|  # | Descriptor               |
+| -: | ------------------------ |
+|  1 | `Narumi_Katayama_index`  |
+|  2 | `Multiplicative_Zagreb1` |
+|  3 | `Mostar_index`           |
+|  4 | `Szeged_index`           |
+|  5 | `Spectral_radius`        |
+|  6 | `Average_eccentricity`   |
+|  7 | `Sigma_index`            |
+|  8 | `Balaban_J_index`        |
+|  9 | `Multiplicative_Zagreb2` |
 
-Three ensemble regression approaches are evaluated:
-
-* **Random Forest (RF)**
-* **Gradient Boosting (GB)**
-* **XGBoost (XGB)**
-
-An ensemble prediction is obtained by averaging the predictions from the three models.
-
-The main modeling workflow uses:
-
-* 300 estimators
-* Five-fold cross-validation
-* Random seed = 42
-
-The scaler and models are fitted only on the internal training portion of each fold to maintain a leakage-free validation procedure.
+These nine descriptors constitute the final panel used by the main ensemble modeling workflow.
 
 ---
 
-## Predicted Properties
+# 🤖 Machine Learning Framework
 
-The main QSPR models predict eight physicochemical properties:
+Three regression algorithms are evaluated:
 
-1. Molecular Weight
-2. Polar Area (TPSA)
-3. Complexity (BertzCT)
-4. XLogP (Crippen)
-5. Heavy-Atom Count
-6. H-Bond Donor Count
-7. H-Bond Acceptor Count
-8. Rotatable-Bond Count
+```mermaid
+flowchart TB
 
-QEDw is subsequently modeled as an additional drug-likeness endpoint using the same final 9-descriptor topological panel.
+    X["🧬 9 Topological Descriptors"]
 
----
+    X --> RF["🌲 Random Forest"]
+    X --> GB["📈 Gradient Boosting"]
+    X --> XGB["⚡ XGBoost"]
 
-## Validation and Reliability Analysis
+    RF --> E["🤝 Ensemble"]
+    GB --> E
+    XGB --> E
 
-### Five-Fold Cross-Validation
+    E --> Y["📊 Predicted Properties"]
+```
 
-Five-fold cross-validation is performed on the working set to obtain out-of-fold predictions and evaluate model performance without using held-out observations during model fitting.
+### Models
 
-### Blind External Validation
+| Model                    | Description                         |
+| ------------------------ | ----------------------------------- |
+| 🌲 **Random Forest**     | Tree-based ensemble regression      |
+| 📈 **Gradient Boosting** | Sequential boosting regression      |
+| ⚡ **XGBoost**            | Gradient-boosted tree model         |
+| 🤝 **Ensemble**          | Average prediction of RF + GB + XGB |
 
-A separate set of **133 compounds** is retained as a blind external validation set and is not used for model fitting.
-
-### Y-Randomization
-
-Y-randomization tests whether model performance could arise from chance correlations.
-
-The implementation performs:
-
-* 200 target permutations
-* Fixed 80/20 train/holdout split
-* Random state = 42
-* 30 estimators for RF, GB, and XGB
-
-The reduced estimator count and fixed split are documented as a computational simplification for the permutation analysis.
-
-### Applicability Domain
-
-Williams-plot analysis evaluates:
-
-* Leverage
-* Standardized residuals
-* High-leverage compounds
-* Response outliers
-* Compounds outside the applicability domain
-
-The leverage threshold is calculated using:
-
-`h* = 3(p + 1) / n`
-
-where `p` is the number of final descriptors and `n` is the working-set size.
+The primary workflow uses **300 estimators** and **five-fold cross-validation**.
 
 ---
 
-## RDKit Benchmark
+# 🎯 Predicted Properties
 
-An independent RDKit descriptor panel is generated for all 1,335 compounds.
+The primary QSPR workflow models eight physicochemical properties:
 
-Descriptors that are directly equivalent to the eight target properties are deliberately excluded from the candidate RDKit descriptor pool to provide a fair comparison with the topological descriptor model.
+| Property                 |
+| ------------------------ |
+| ⚛️ Molecular Weight      |
+| 💧 Polar Area (TPSA)     |
+| 🧩 Complexity (BertzCT)  |
+| 🧪 XLogP (Crippen)       |
+| 🔗 Heavy-Atom Count      |
+| 🧲 H-Bond Donor Count    |
+| 🧲 H-Bond Acceptor Count |
+| 🔄 Rotatable-Bond Count  |
 
-The RDKit descriptors undergo:
-
-* Zero-variance filtering
-* Iterative VIF reduction
-* Ensemble modeling
-* Five-fold cross-validation
-* Blind validation
-
-The resulting RDKit model is used as a benchmark against the topological descriptor approach.
-
----
-
-## QEDw Modeling
-
-QEDw is treated as a composite drug-likeness endpoint.
-
-The same nine topological descriptors are used to model QEDw using:
-
-* RF
-* Gradient Boosting
-* XGBoost
-* Five-fold cross-validation
-* Blind validation
-* Y-randomization
-* Williams-plot applicability-domain analysis
+The QEDw endpoint is subsequently modeled using the same final nine-descriptor topological panel.
 
 ---
 
-## Compound Prioritization
+# 🔄 Leakage-Free Cross-Validation
 
-The final prioritization stage combines:
+The main modeling workflow uses **five-fold cross-validation**.
 
-* QEDw
-* Chemical-space novelty
+```mermaid
+flowchart LR
+
+    A["🧬 Working Set<br/>1,202 Compounds"]
+    B["🔀 Split into<br/>5 Folds"]
+    C["🔧 Fit on<br/>Training Fold"]
+    D["📊 Predict<br/>Held-Out Fold"]
+    E["🔁 Repeat<br/>5 Times"]
+    F["📈 Out-of-Fold<br/>Predictions"]
+
+    A --> B --> C --> D --> E --> F
+```
+
+The descriptor panel is fixed using the predefined VIF criterion, while model fitting and scaling are performed within the appropriate training folds to avoid leakage from validation data.
+
+---
+
+# 🎯 Blind External Validation
+
+A separate **133-compound blind set** is used for external validation.
+
+```mermaid
+flowchart LR
+
+    A["🔵 Working Set<br/>1,202"]
+    B["🔄 5-Fold CV"]
+    C["📊 Model Development"]
+
+    D["🔴 Blind Set<br/>133"]
+    E["🎯 External<br/>Validation"]
+
+    A --> B --> C
+    C --> E
+    D --> E
+```
+
+Blind-set performance is evaluated using model predictions rather than selecting models solely from cross-validation performance.
+
+---
+
+# 📊 Model Diagnostics
+
+The diagnostic stage evaluates observed versus predicted values and residual behavior.
+
+```mermaid
+flowchart TB
+
+    A["🤖 Ensemble Predictions"]
+
+    A --> B["📈 Observed vs Predicted"]
+    A --> C["📉 Residual vs Predicted"]
+    A --> D["📊 Residual Distribution"]
+
+    B --> E["🔍 Model Performance"]
+    C --> E
+    D --> E
+```
+
+The diagnostic workflow generates compound-level observed/predicted values and residual statistics for both cross-validation and blind validation.
+
+---
+
+# 🎲 Y-Randomization
+
+Y-randomization tests whether predictive performance could arise from chance correlations.
+
+```mermaid
+flowchart TD
+
+    A["🧬 Fixed Descriptor Matrix"]
+    B["🔀 Randomly Permute Target"]
+    C["🤖 Train RF + GB + XGB"]
+    D["📊 Calculate R²"]
+    E["🔁 200 Permutations"]
+    F["📈 Null Distribution"]
+    G["⚖️ Compare with Actual Performance"]
+
+    A --> B --> C --> D --> E --> F --> G
+```
+
+The implementation performs **200 permutations** using a fixed **80/20 train/holdout split** and **30 estimators** for the permutation models. This is explicitly documented as a computational simplification compared with the main five-fold CV protocol.
+
+---
+
+# 🛡️ Applicability Domain
+
+The Williams-plot analysis evaluates prediction reliability using:
+
+* **Leverage**
+* **Standardized residuals**
+* **Applicability-domain boundaries**
+
+```mermaid
+flowchart TD
+
+    A["🧪 Compound"]
+
+    A --> B["📐 Leverage"]
+    A --> C["📊 Standardized Residual"]
+
+    B --> D{"h ≤ h*?"}
+    C --> E{"|SR| ≤ 3?"}
+
+    D --> F["🟢 Normal"]
+    D --> G["🟠 High Leverage"]
+
+    E --> F
+    E --> H["🔴 Response Outlier"]
+
+    G --> I["⚠️ Outside AD"]
+    H --> I
+```
+
+Compounds are classified as normal, high leverage, response outliers, or outside the applicability domain according to leverage and standardized-residual thresholds.
+
+---
+
+# 🧪 RDKit Benchmark
+
+An independent RDKit descriptor representation is generated for comparison with the topological descriptor approach.
+
+```mermaid
+flowchart LR
+
+    A["🧪 RDKit Descriptor Pool"]
+    B["⚪ Zero-Variance Filter"]
+    C["📉 VIF Reduction"]
+    D["🤖 RF + GB + XGB"]
+    E["🔄 5-Fold CV"]
+    F["🎯 Blind Validation"]
+
+    A --> B --> C --> D --> E --> F
+```
+
+Descriptors directly equivalent to the eight target properties are excluded from the RDKit candidate pool to maintain a fair benchmark.
+
+The RDKit workflow follows the same general ensemble modeling structure as the topological model.
+
+---
+
+# 💊 QEDw Modeling
+
+QEDw is treated as a **composite drug-likeness endpoint**.
+
+The workflow uses:
+
+```text
+🧬 9 Topological Descriptors
+            ↓
+     🤖 RF + GB + XGB
+            ↓
+       🔄 5-Fold CV
+            ↓
+       🎯 Blind Validation
+            ↓
+       🎲 Y-Randomization
+            ↓
+       🛡️ Applicability Domain
+```
+
+The QEDw analysis uses the same 1,202/133 working/blind split and final nine-descriptor topological panel.
+
+---
+
+# 🧠 Phytochemical Prioritization
+
+The final prioritization stage combines **drug-likeness** and **chemical-space novelty**.
+
+```mermaid
+flowchart TB
+
+    A["💊 QEDw"]
+    B["🧬 Morgan / ECFP4 Fingerprints"]
+
+    B --> C["🔍 Tanimoto Similarity"]
+    C --> D["🧠 Structural Novelty"]
+
+    A --> E["📊 QEDw Percentile"]
+    D --> F["📊 Novelty Percentile"]
+
+    E --> G["🏆 Priority Score"]
+    F --> G
+
+    G --> H["🌿 Prioritized Phytochemicals"]
+```
 
 Structural novelty is calculated using **ECFP4/Morgan fingerprints** and Tanimoto similarity to the five nearest neighbors within the 1,335-compound dataset.
 
-The priority score is defined as:
+### 🏆 Priority Score
 
 ```text
 Priority Score =
@@ -235,36 +405,43 @@ Priority Score =
 0.5 × Tanimoto novelty percentile rank
 ```
 
-This produces a ranked list of structurally interesting and drug-like phytochemical candidates.
+This provides a combined ranking based on drug-likeness and chemical-space novelty.
 
 ---
 
-## Python Scripts
+# 📁 Repository Structure
 
-| Script                         | Purpose                                               |
-| ------------------------------ | ----------------------------------------------------- |
-| `step1_data_assembly.py`       | Data merging, validation and reproducibility manifest |
-| `step3_4_pipeline.py`          | Zero-variance filtering and VIF descriptor reduction  |
-| `step9_10_11_modeling.py`      | RF/GB/XGB modeling, 5-fold CV and blind validation    |
-| `step12_13_diagnostics.py`     | Observed-vs-predicted plots and residual diagnostics  |
-| `step14_yrandomization.py`     | Y-randomization analysis                              |
-| `step15_williams_ad.py`        | Williams applicability-domain analysis                |
-| `step16a_rdkit_descriptors.py` | RDKit descriptor generation                           |
-| `step16b_rdkit_vif.py`         | RDKit descriptor VIF reduction                        |
-| `step16c_rdkit_models.py`      | RDKit benchmark modeling                              |
-| `step17_best_model.py`         | Best-model selection using blind-set performance      |
-| `step18_qedw_modelling.py`     | QEDw modeling and validation                          |
-| `step19_prioritization_v2.py`  | Chemical-space novelty and compound prioritization    |
-| `step20_final_integration.py`  | Final integration of the complete analysis            |
-| `bootstrap_blind_r2_full.py`   | Bootstrap confidence intervals for blind-set R²       |
-| `yrand_one_property.py`        | Y-randomization for an individual property            |
-| `yrand_aggregate.py`           | Aggregation of Y-randomization results                |
+```text
+📦 topological-descriptor-ml
+│
+├── 📄 README.md
+│
+├── 🐍 step1_data_assembly.py
+├── 🐍 step3_4_pipeline.py
+├── 🐍 step9_10_11_modeling.py
+├── 🐍 step12_13_diagnostics.py
+├── 🐍 step14_yrandomization.py
+├── 🐍 step15_williams_ad.py
+│
+├── 🧪 step16a_rdkit_descriptors.py
+├── 📉 step16b_rdkit_vif.py
+├── 🤖 step16c_rdkit_models.py
+│
+├── 🏆 step17_best_model.py
+├── 💊 step18_qedw_modelling.py
+├── 🧠 step19_prioritization_v2.py
+├── 📊 step20_final_integration.py
+│
+├── 🎲 yrand_one_property.py
+├── 📊 yrand_aggregate.py
+└── 📈 bootstrap_blind_r2_full.py
+```
 
 ---
 
-## Requirements
+# 🐍 Requirements
 
-The scripts use Python scientific and machine-learning libraries including:
+The pipeline uses the following major Python packages:
 
 ```text
 numpy
@@ -278,57 +455,163 @@ xgboost
 rdkit
 ```
 
-Install the commonly used dependencies with:
+Install the commonly used packages with:
 
 ```bash
 pip install numpy pandas scikit-learn scipy statsmodels matplotlib openpyxl xgboost
 ```
 
-**RDKit** should be installed using an appropriate RDKit/Conda environment if it is not available through your existing Python installation.
+For RDKit, use an appropriate RDKit-compatible Python/Conda environment.
 
 ---
 
-## Reproducibility
+# ▶️ Running the Pipeline
 
-The primary workflow uses a fixed random seed:
+The scripts are organized according to the research workflow and should generally be executed sequentially.
 
-```text
-Random seed = 42
-```
-
-This seed is used to make dataset splitting, cross-validation, bootstrapping and permutation-based analyses reproducible.
-
-The data assembly stage also records dataset information and file hashes in a manifest for downstream reproducibility.
-
----
-
-## Running the Pipeline
-
-The scripts are designed as sequential stages. Run them according to their step numbers, ensuring that the required input files generated by earlier stages are available before executing later stages.
-
-Example:
+### 1️⃣ Data Assembly
 
 ```bash
 python step1_data_assembly.py
+```
+
+### 2️⃣ Descriptor QC and VIF Reduction
+
+```bash
 python step3_4_pipeline.py
+```
+
+### 3️⃣ QSPR Modeling
+
+```bash
 python step9_10_11_modeling.py
+```
+
+### 4️⃣ Diagnostics
+
+```bash
 python step12_13_diagnostics.py
+```
+
+### 5️⃣ Y-Randomization
+
+```bash
 python step14_yrandomization.py
+```
+
+### 6️⃣ Applicability Domain
+
+```bash
 python step15_williams_ad.py
 ```
 
-The RDKit benchmark and subsequent analysis can then be executed using the corresponding Step 16–20 scripts.
+### 7️⃣ RDKit Benchmark
+
+```bash
+python step16a_rdkit_descriptors.py
+python step16b_rdkit_vif.py
+python step16c_rdkit_models.py
+```
+
+### 8️⃣ Model Selection
+
+```bash
+python step17_best_model.py
+```
+
+### 9️⃣ QEDw Modeling
+
+```bash
+python step18_qedw_modelling.py
+```
+
+### 🔟 Compound Prioritization
+
+```bash
+python step19_prioritization_v2.py
+```
+
+### 1️⃣1️⃣ Final Integration
+
+```bash
+python step20_final_integration.py
+```
 
 ---
 
-## Important Note
+# 🔁 Reproducibility
 
-The repository contains the **analysis and modeling code**. Input datasets, generated Excel workbooks, figures, and other potentially large or restricted files are not included unless explicitly permitted.
+The primary workflow uses:
 
-Several scripts currently expect input files to exist in predefined local directories. These paths may need to be modified when running the code on another system.
+| Parameter                          | Setting              |
+| ---------------------------------- | -------------------- |
+| 🧬 Total compounds                 | **1,335**            |
+| 🔵 Working set                     | **1,202**            |
+| 🔴 Blind set                       | **133**              |
+| 🔢 Initial topological descriptors | **44**               |
+| 🧬 Final topological descriptors   | **9**                |
+| 🔄 Cross-validation                | **5-fold**           |
+| 🤖 Main model estimators           | **300**              |
+| 🎲 Y-randomization                 | **200 permutations** |
+| 🌱 Random seed                     | **42**               |
+
+The data-assembly stage records the random seed, column roles, file hashes, dataset shape, and validation checks to support reproducible downstream processing.
 
 ---
 
-## Project Summary
+# ⚠️ Important Note
 
-This project implements a reproducible QSPR framework for IMPPAT phytochemicals by combining compact topological descriptors with ensemble machine learning. The workflow emphasizes descriptor reduction, leakage-controlled validation, independent blind testing, statistical robustness checks, applicability-domain assessment, and comparison with an independent RDKit descriptor representation.
+This repository contains the **Python source code** for the analysis pipeline.
+
+The following are intentionally not included in this code-only repository unless distribution is permitted:
+
+* Raw datasets
+* Excel input files
+* Generated Excel workbooks
+* Generated figures
+* Intermediate model outputs
+* Checkpoint files
+
+Several scripts currently reference predefined local input/output directories. When running the code on another system, update the corresponding file paths.
+
+---
+
+# 📌 Research Summary
+
+This project implements a reproducible QSPR framework for IMPPAT phytochemicals by combining a compact topological descriptor representation with ensemble machine learning.
+
+The workflow emphasizes:
+
+**🔢 Descriptor reduction**
+**🤖 Ensemble machine learning**
+**🔄 Leakage-controlled cross-validation**
+**🎯 Blind external validation**
+**🎲 Y-randomization**
+**🛡️ Applicability-domain assessment**
+**🧪 RDKit benchmarking**
+**💊 QEDw modeling**
+**🧠 Chemical-space prioritization**
+
+---
+
+## 🛠️ Technologies
+
+<p align="center">
+
+**Python** • **RDKit** • **Scikit-learn** • **XGBoost** • **Pandas** • **NumPy** • **SciPy** • **Statsmodels** • **Matplotlib**
+
+</p>
+
+---
+
+## 👨‍💻 Project
+
+### IMPPAT Phytochemical QSPR Analysis
+
+**Molecular Structure → Descriptor Reduction → Machine Learning → Reliable Prediction → Phytochemical Prioritization**
+
+<p align="center">
+
+⭐ **If this repository is useful for your research, consider starring the repository.**
+
+</p>
